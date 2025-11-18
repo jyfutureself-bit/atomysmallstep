@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>애터미 스텝-업 AI</title>
+    <!-- Tailwind CSS 로드 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter 폰트 로드 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Phosphor 아이콘 로드 -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        /* Inter 폰트와 Noto Sans KR 폰트를 기본으로 설정 */
+        body {
+            font-family: 'Inter', 'Noto Sans KR', sans-serif;
+            overscroll-behavior: none;
+        }
+        /* 로딩 스피너 스타일 */
+        .spinner {
+            border-top-color: #3498db;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        /* 커스텀 메시지 박스 스타일 */
+        .message-box {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 antialiased">
+
+    <div class="flex flex-col h-screen max-w-lg mx-auto bg-white shadow-lg">
+
+        <!-- 앱 헤더 -->
+        <header class="bg-blue-600 text-white p-4 shadow-md z-10">
+            <h1 class="text-xl font-bold text-center">애터미 스텝-업 AI</h1>
+            <p class="text-center text-sm opacity-90">매일의 작은 실천이 모여 성공을 만듭니다.</p>
+        </header>
+
+        <!-- 메인 콘텐츠 영역 -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+
+            <!-- 1. 오늘의 스몰 스텝 (기본 뷰) -->
+            <div id="view-dashboard" class="space-y-4">
+                <div classs="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold text-gray-800">오늘의 스몰 스텝</h2>
+                    <input type="date" id="date-picker" class="text-sm p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <!-- 스몰 스텝 폼 -->
+                <form id="step-form" class="space-y-4">
+                    <!-- 항목: VOD 시청 -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                        <label class="flex items-center space-x-3">
+                            <input type="checkbox" id="step-vod" class="h-5 w-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                            <span class="text-lg font-medium text-gray-700">애터미 VOD 시청하기</span>
+                        </label>
+                    </div>
+
+                    <!-- 항목: 고객 만나기 -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 space-y-2">
+                        <label class="flex items-center justify-between">
+                            <span class="text-lg font-medium text-gray-700">고객 만나기</span>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="step-customer-target" min="0" class="w-16 p-1 text-center border rounded-md" placeholder="O">
+                                <span class="text-gray-600">명</span>
+                            </div>
+                        </label>
+                        <textarea id="step-customer-notes" class="w-full mt-2 p-2 border rounded-md text-sm" rows="2" placeholder="활동 내용 기록 (예: 송남희 - 7종 체험분 전달)"></textarea>
+                    </div>
+
+                    <!-- 항목: 신규 회원가입 -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 space-y-2">
+                        <label class="flex items-center justify-between">
+                            <span class="text-lg font-medium text-gray-700">신규 회원가입</span>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="step-member-target" min="0" class="w-16 p-1 text-center border rounded-md" placeholder="O">
+                                <span class="text-gray-600">명</span>
+                            </div>
+                        </label>
+                        <textarea id="step-member-notes" class="w-full mt-2 p-2 border rounded-md text-sm" rows="2" placeholder="이름 기록 (예: 홍길동, 김영희)"></textarea>
+                    </div>
+
+                    <!-- 항목: 안부 전화 -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 space-y-2">
+                        <label class="flex items-center justify-between">
+                            <span class="text-lg font-medium text-gray-700">안부 전화</span>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="step-call-target" min="0" class="w-16 p-1 text-center border rounded-md" placeholder="O">
+                                <span class="text-gray-600">명</span>
+                            </div>
+                        </label>
+                        <textarea id="step-call-notes" class="w-full mt-2 p-2 border rounded-md text-sm" rows="2" placeholder="대상 기록 (예: 문영상)"></textarea>
+                    </div>
+
+                    <!-- 항목: SNS / 소통하기 -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 space-y-2">
+                        <label class="flex items-center justify-between">
+                            <span class="text-lg font-medium text-gray-700">SNS / 소통하기</span>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" id="step-sns-target" min="0" class="w-16 p-1 text-center border rounded-md" placeholder="O">
+                                <span class="text-gray-600">건</span>
+                            </div>
+                        </label>
+                        <textarea id="step-sns-notes" class="w-full mt-2 p-2 border rounded-md text-sm" rows="2" placeholder="내용 기록 (예: 안부 문자 전송, SNS 영상 올림)"></textarea>
+                    </div>
+
+                    <!-- 항목: 기타 활동 -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 space-y-2">
+                        <label class="text-lg font-medium text-gray-700">기타 활동 기록</label>
+                        <textarea id="step-other-notes" class="w-full mt-2 p-2 border rounded-md text-sm" rows="2" placeholder="내용 기록 (예: 개인적인 일로 세무상담 받음)"></textarea>
+                    </div>
+
+                    <!-- 저장 버튼 -->
+                    <button type="submit" id="save-steps" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:bg-blue-700 transition duration-300 flex items-center justify-center space-x-2">
+                        <i class="ph-bold ph-check-circle text-xl"></i>
+                        <span>오늘의 스텝 저장하기</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- 2. AI 비즈니스 코치 -->
+            <div id="view-ai-coach" class="hidden space-y-6">
+                <h2 class="text-2xl font-bold text-gray-800">AI 비즈니스 코치 (Opal)</h2>
+
+                <!-- 오늘의 동기부여 -->
+                <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg shadow-sm">
+                    <h3 class="text-lg font-semibold text-blue-800 mb-2">오늘의 동기부여</h3>
+                    <p id="ai-motivation" class="text-gray-700 italic">"김애터미님! 오늘 VOD 시청으로 비즈니스 감각을 깨워보세요. 작은 실천이 큰 차이를 만듭니다!"</p>
+                    <button id="refresh-motivation" class="mt-2 text-sm text-blue-600 hover:underline">새로운 메시지 받기</button>
+                </div>
+
+                <!-- AI 기능 탭 -->
+                <div class="space-y-4">
+                    <!-- 롤플레잉 -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm border">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3">비즈니스 롤플레잉</h3>
+                        <label for="ai-roleplay-prompt" class="text-sm font-medium text-gray-600">고객의 질문이나 거절 상황을 입력하세요:</label>
+                        <textarea id="ai-roleplay-prompt" class="w-full mt-2 p-2 border rounded-md" rows="2" placeholder="예: '애터미 그거 다단계 아니야?'"></textarea>
+                        <button id="ai-roleplay-submit" class="w-full mt-2 bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-indigo-700 transition">AI 답변 받기</button>
+                    </div>
+                    
+                    <!-- 콘텐츠 생성 -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm border">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3">콘텐츠 생성 도우미</h3>
+                        <label for="ai-content-prompt" class="text-sm font-medium text-gray-600">필요한 콘텐츠를 요청하세요:</label>
+                        <textarea id="ai-content-prompt" class="w-full mt-2 p-2 border rounded-md" rows="2" placeholder="예: 헤모힘 구매 고객에게 보낼 감사 문자"></textarea>
+                        <button id="ai-content-submit" class="w-full mt-2 bg-teal-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-teal-700 transition">AI로 생성하기</button>
+                    </div>
+
+                    <!-- 목표 설정 -->
+                    <div class="bg-white p-4 rounded-lg shadow-sm border">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-3">맞춤형 목표 설정</h3>
+                        <button id="ai-goal-submit" class="w-full bg-amber-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-amber-700 transition">"세일즈 마스터" 스몰 스텝 플랜 받기</button>
+                    </div>
+                </div>
+
+                <!-- AI 응답 영역 -->
+                <div id="ai-response-area" class="bg-gray-50 p-4 rounded-lg border border-gray-200 min-h-[100px] whitespace-pre-wrap font-mono text-sm">
+                    <p class="text-gray-500">AI 응답이 여기에 표시됩니다...</p>
+                </div>
+            </div>
+
+            <!-- 3. 성과 및 게이미피케이션 -->
+            <div id="view-gamification" class="hidden space-y-6">
+                <h2 class="text-2xl font-bold text-gray-800">성과 리포트</h2>
+                
+                <!-- 실천 캘린더 (Streaks) -->
+                <div class="bg-white p-4 rounded-lg shadow-sm border">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3">실천 캘린더 (Streaks)</h3>
+                    <div class="flex justify-between items-center mb-2">
+                        <button id="prev-month" class="p-1 rounded-full hover:bg-gray-200"><i class="ph ph-caret-left text-xl"></i></button>
+                        <h4 id="calendar-month-year" class="text-md font-semibold">2025년 11월</h4>
+                        <button id="next-month" class="p-1 rounded-full hover:bg-gray-200"><i class="ph ph-caret-right text-xl"></i></button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 text-center text-sm font-medium text-gray-500 mb-2">
+                        <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+                    </div>
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-1">
+                        <!-- 캘린더 날짜가 여기에 동적으로 생성됩니다 -->
+                    </div>
+                </div>
+
+                <!-- 통계 -->
+                <div class="bg-white p-4 rounded-lg shadow-sm border">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-3">나의 통계</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-blue-50 p-3 rounded-lg text-center">
+                            <div class="text-sm text-blue-700">연속 실천</div>
+                            <div id="stats-streak" class="text-2xl font-bold text-blue-900">0일</div>
+                        </div>
+                        <div class="bg-amber-50 p-3 rounded-lg text-center">
+                            <div class="text-sm text-amber-700">나의 레벨</div>
+                            <div id="stats-level" class="text-2xl font-bold text-amber-900">새싹</div>
+                        </div>
+                        <div class="bg-green-50 p-3 rounded-lg text-center">
+                            <div class="text-sm text-green-700">총 VOD 시청</div>
+                            <div id="stats-vod" class="text-2xl font-bold text-green-900">0회</div>
+                        </div>
+                        <div class="bg-indigo-50 p-3 rounded-lg text-center">
+                            <div class="text-sm text-indigo-700">총 고객 미팅</div>
+                            <div id="stats-customers" class="text-2xl font-bold text-indigo-900">0명</div>
+                        </div>
+                        <div class="bg-rose-50 p-3 rounded-lg text-center">
+                            <div class="text-sm text-rose-700">총 회원가입</div>
+                            <div id="stats-members" class="text-2xl font-bold text-rose-900">0명</div>
+                        </div>
+                        <div class="bg-cyan-50 p-3 rounded-lg text-center">
+                            <div class="text-sm text-cyan-700">총 안부전화</div>
+                            <div id="stats-calls" class="text-2xl font-bold text-cyan-900">0명</div>
+                        </div>
+                        <div class="bg-purple-50 p-3 rounded-lg text-center">
+                            <div class="text-sm text-purple-700">총 SNS 소통</div>
+                            <div id="stats-sns" class="text-2xl font-bold text-purple-900">0건</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. 파트너 커넥트 -->
+            <div id="view-partner" class="hidden space-y-6">
+                <h2 class="text-2xl font-bold text-gray-800">파트너 커넥트</h2>
+                <div class="bg-white p-4 rounded-lg shadow-sm border space-y-4">
+                    <h3 class="text-lg font-semibold text-gray-700">내 프로필</h3>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="nickname-input" class="flex-1 p-2 border rounded-md" placeholder="닉네임 (예: atomy_angel)">
+                        <button id="nickname-save" class="bg-blue-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-blue-700">저장</button>
+                    </div>
+                    <p class="text-sm text-gray-500">현재 닉네임: <span id="current-nickname" class="font-semibold">설정 안됨</span></p>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg shadow-sm border space-y-4">
+                    <h3 class="text-lg font-semibold text-gray-700">스폰서에게 내 활동 공유</h3>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="sponsor-nickname" class="flex-1 p-2 border rounded-md" placeholder="스폰서 닉네임 입력">
+                        <button id="sponsor-allow" class="bg-green-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-green-700">허용</button>
+                    </div>
+                    <p class="text-sm text-gray-500">이 기능은 프로토타입이며, 실제 데이터 공유는 구현되지 않았습니다.</p>
+                </div>
+
+                <div class="bg-white p-4 rounded-lg shadow-sm border space-y-4">
+                    <h3 class="text-lg font-semibold text-gray-700">파트너 활동 확인</h3>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="partner-nickname" class="flex-1 p-2 border rounded-md" placeholder="파트너 닉네임 입력">
+                        <button id="partner-view" class="bg-indigo-600 text-white font-bold py-2 px-3 rounded-lg hover:bg-indigo-700">조회</button>
+                    </div>
+                    <div id="partner-view-area" class="text-sm text-gray-500 hidden p-3 bg-gray-50 rounded-md">
+                        <!-- 파트너 활동 조회 결과 (프로토타입) -->
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- 하단 네비게이션 바 -->
+        <nav class="grid grid-cols-4 gap-1 p-2 border-t border-gray-200 bg-white sticky bottom-0 z-10">
+            <button data-view="dashboard" class="nav-btn rounded-lg p-2 text-center text-blue-600 bg-blue-50">
+                <i class="ph-bold ph-check-square-offset text-2xl"></i>
+                <span class="text-xs font-medium">오늘의 스텝</span>
+            </button>
+            <button data-view="ai-coach" class="nav-btn rounded-lg p-2 text-center text-gray-500 hover:bg-gray-100">
+                <i class="ph-bold ph-sparkle text-2xl"></i>
+                <span class="text-xs font-medium">AI 코치</span>
+            </button>
+            <button data-view="gamification" class="nav-btn rounded-lg p-2 text-center text-gray-500 hover:bg-gray-100">
+                <i class="ph-bold ph-chart-line-up text-2xl"></i>
+                <span class="text-xs font-medium">성과</span>
+            </button>
+            <button data-view="partner" class="nav-btn rounded-lg p-2 text-center text-gray-500 hover:bg-gray-100">
+                <i class="ph-bold ph-users-three text-2xl"></i>
+                <span class="text-xs font-medium">파트너</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- 로딩 오버레이 -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="spinner w-16 h-16 border-4 border-t-4 border-gray-200 rounded-full"></div>
+    </div>
+    
+    <!-- 커스텀 메시지 박스 -->
+    <div id="message-box" class="message-box fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transform translate-y-10 z-50">
+        <span id="message-text"></span>
+    </div>
+
+    <!-- Firebase 및 앱 로직 스크립트 -->
+    <script type="module">
+        // Firebase SDK 임포트
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, inMemoryPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs, setLogLevel, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- 글로벌 변수 및 설정 ---
+        // Canvas 환경에서 제공되는 변수 사용
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth, userId, app;
+        let currentDate = new Date(); // 캘린더용 현재 날짜
+        let selectedDateStr = getISODate(new Date()); // 대시보드용 선택된 날짜
+
+        // UI 요소
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+
+        // AI 모델 설정
+        const GEMINI_MODEL = 'gemini-2.5-flash-preview-09-2025';
+        const GEMINI_API_KEY = ""; // Canvas에서 자동 제공
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+        
+        // --- 유틸리티 함수 ---
+
+        // 로딩 오버레이 표시/숨기기
+        function showLoading(show) {
+            loadingOverlay.classList.toggle('hidden', !show);
+        }
+
+        // 커스텀 메시지 박스 표시
+        function showMessage(message, duration = 3000) {
+            messageText.textContent = message;
+            messageBox.classList.remove('opacity-0', 'translate-y-10');
+            messageBox.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                messageBox.classList.remove('opacity-100', 'translate-y-0');
+                messageBox.classList.add('opacity-0', 'translate-y-10');
+            }, duration);
+        }
+
+        // YYYY-MM-DD 형식의 문자열 반환
+        function getISODate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        // --- 네비게이션 로직 ---
+        const navButtons = document.querySelectorAll('.nav-btn');
+        const views = {
+            dashboard: document.getElementById('view-dashboard'),
+            'ai-coach': document.getElementById('view-ai-coach'),
+            gamification: document.getElementById('view-gamification'),
+            partner: document.getElementById('view-partner')
+        };
+
+        navButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const viewName = button.dataset.view;
+                
+                // 모든 뷰 숨기기
+                Object.values(views).forEach(v => v.classList.add('hidden'));
+                
+                // 클릭된 뷰 표시
+                if (views[viewName]) {
+                    views[viewName].classList.remove('hidden');
+                }
+
+                // 네비게이션 버튼 활성 스타일 업데이트
+                navButtons.forEach(btn => {
+                    btn.classList.remove('text-blue-600', 'bg-blue-50');
+                    btn.classList.add('text-gray-500', 'hover:bg-gray-100');
+                });
+                button.classList.add('text-blue-600', 'bg-blue-50');
+                button.classList.remove('text-gray-500', 'hover:bg-gray-100');
+                
+                // '성과' 탭 클릭 시 캘린더 및 통계 새로고침
+                if (viewName === 'gamification') {
+                    renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
+                    loadStats();
+                }
+            });
+        });
+
+        // --- Firebase 인증 및 초기화 ---
+        async function initializeFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // Firebase 로깅 (디버깅용)
+                // setLogLevel('debug');
+
+                // 메모리 지속성 설정 (세션 유지)
+                await setPersistence(auth, inMemoryPersistence);
+
+                console.log("Firebase 초기화 및 인증 시작...");
+
+                // 인증 상태 리스너
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        console.log("인증 성공:", user.uid);
+                        userId = user.uid;
+                        await onUserAuthenticated();
+                    } else {
+                        console.log("인증된 사용자 없음, 익명 또는 토큰 로그인 시도...");
+                        if (initialAuthToken) {
+                            try {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                                console.log("커스텀 토큰으로 로그인 성공");
+                            } catch (tokenError) {
+                                console.error("커스텀 토큰 로그인 실패, 익명 로그인 시도:", tokenError);
+                                await signInAnonymously(auth);
+                            }
+                        } else {
+                            await signInAnonymously(auth);
+                            console.log("익명으로 로그인 성공");
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase 초기화 실패:", error);
+                showMessage("앱 초기화에 실패했습니다.");
+            }
+        }
+        
+        // 인증 완료 후 실행될 함수
+        async function onUserAuthenticated() {
+            if (!userId) return;
+            
+            showLoading(true);
+            try {
+                // 1. 대시보드 날짜 설정 및 데이터 로드
+                const datePicker = document.getElementById('date-picker');
+                datePicker.value = selectedDateStr;
+                datePicker.addEventListener('change', (e) => {
+                    selectedDateStr = e.target.value;
+                    loadStepData(selectedDateStr);
+                });
+                await loadStepData(selectedDateStr);
+                
+                // 2. 닉네임 로드
+                await loadNickname();
+                
+                // 3. AI 동기부여 메시지 로드 (페이지 로드 시 1회)
+                // getAIMotivation();
+            } catch (error) {
+                console.error("인증 후 데이터 로드 실패:", error);
+                showMessage("데이터 로드 중 오류가 발생했습니다.");
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // --- 1. 스몰 스텝 대시보드 로직 ---
+        
+        const stepForm = document.getElementById('step-form');
+        const saveButton = document.getElementById('save-steps');
+        
+        // UI 요소 ID와 Firestore 필드명 매핑
+        const stepFields = {
+            'step-vod': { type: 'checkbox', dbField: 'vod_watched' },
+            'step-customer-target': { type: 'number', dbField: 'customers_target' },
+            'step-customer-notes': { type: 'text', dbField: 'customers_notes' },
+            'step-member-target': { type: 'number', dbField: 'members_target' },
+            'step-member-notes': { type: 'text', dbField: 'members_notes' },
+            'step-call-target': { type: 'number', dbField: 'calls_target' },
+            'step-call-notes': { type: 'text', dbField: 'calls_notes' },
+            'step-sns-target': { type: 'number', dbField: 'sns_target' },
+            'step-sns-notes': { type: 'text', dbField: 'sns_notes' },
+            'step-other-notes': { type: 'text', dbField: 'other_notes' }
+        };
+
+        // 데이터 저장
+        stepForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) {
+                showMessage("인증 정보가 없습니다. 잠시 후 다시 시도하세요.");
+                return;
+            }
+
+            showLoading(true);
+            saveButton.disabled = true;
+
+            const date = selectedDateStr;
+            const docRef = doc(db, 'artifacts', appId, 'users', userId, 'daily_steps', date);
+            
+            let dataToSave = { date: date };
+            let completedAny = false; // 실천 여부 (캘린더용)
+
+            for (const [id, config] of Object.entries(stepFields)) {
+                const el = document.getElementById(id);
+                if (config.type === 'checkbox') {
+                    dataToSave[config.dbField] = el.checked;
+                    if (el.checked) completedAny = true;
+                } else if (config.type === 'number') {
+                    const value = parseInt(el.value, 10) || 0;
+                    dataToSave[config.dbField] = value;
+                    if (value > 0) completedAny = true;
+                } else {
+                    const value = el.value.trim();
+                    dataToSave[config.dbField] = value;
+                    if (value.length > 0) completedAny = true;
+                }
+            }
+            
+            // 기타 활동은 체크박스가 없으므로, 노트가 있으면 완료로 간주
+            if (!completedAny && dataToSave['other_notes'].length > 0) {
+                completedAny = true;
+            }
+            
+            dataToSave['completed_any'] = completedAny;
+
+            try {
+                await setDoc(docRef, dataToSave, { merge: true });
+                showMessage("오늘의 스텝이 저장되었습니다!");
+                
+                // 캘린더 뷰가 활성 상태면 즉시 업데이트
+                if (!views.gamification.classList.contains('hidden')) {
+                    renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
+                }
+            } catch (error) {
+                console.error("데이터 저장 실패:", error);
+                showMessage("저장 중 오류가 발생했습니다.");
+            } finally {
+                showLoading(false);
+                saveButton.disabled = false;
+            }
+        });
+
+        // 데이터 로드
+        async function loadStepData(dateStr) {
+            if (!userId) return;
+            
+            showLoading(true);
+            const docRef = doc(db, 'artifacts', appId, 'users', userId, 'daily_steps', dateStr);
+            
+            try {
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    for (const [id, config] of Object.entries(stepFields)) {
+                        const el = document.getElementById(id);
+                        const dbValue = data[config.dbField];
+                        
+                        if (config.type === 'checkbox') {
+                            el.checked = dbValue || false;
+                        } else if (config.type === 'number') {
+                            el.value = dbValue || '';
+                        } else {
+                            el.value = dbValue || '';
+                        }
+                    }
+                } else {
+                    // 데이터가 없으면 폼 초기화
+                    stepForm.reset();
+                }
+            } catch (error) {
+                console.error("데이터 로드 실패:", error);
+                showMessage("데이터를 불러오는 중 오류가 발생했습니다.");
+                stepForm.reset();
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // --- 2. AI 코치 로직 ---
+
+        const aiResponseArea = document.getElementById('ai-response-area');
+        
+        // AI 호출 공통 함수 (백오프 포함)
+        async function callGemini(prompt, systemInstruction = null, retries = 3, delay = 1000) {
+            showLoading(true);
+            aiResponseArea.innerHTML = '<p class="text-gray-500">AI가 응답을 생성 중입니다...</p>';
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+            };
+            
+            if (systemInstruction) {
+                payload.systemInstruction = {
+                    parts: [{ text: systemInstruction }]
+                };
+            }
+
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(GEMINI_API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.candidates && result.candidates[0].content?.parts?.[0]?.text) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        aiResponseArea.textContent = text;
+                        showLoading(false);
+                        return; // 성공
+                    } else {
+                        throw new Error("API 응답 형식이 올바르지 않습니다.");
+                    }
+                } catch (error) {
+                    console.error(`AI 호출 실패 (시도 ${i + 1}/${retries}):`, error);
+                    if (i === retries - 1) {
+                        // 마지막 시도 실패
+                        aiResponseArea.textContent = 'AI 응답 생성에 실패했습니다. 네트워크 연결을 확인하고 다시 시도해 주세요.';
+                        showLoading(false);
+                    } else {
+                        // 재시도 전 대기
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2; // 지수 백오프
+                    }
+                }
+            }
+        }
+        
+        // 동기부여 메시지
+        document.getElementById('refresh-motivation').addEventListener('click', getAIMotivation);
+        async function getAIMotivation() {
+            const prompt = "애터미 사업자를 위한 짧고 힘이 되는 동기부여 메시지를 한 문장 작성해줘. 매일 아침에 보는 메시지야.";
+            const systemPrompt = "당신은 애터미 비즈니스 코치 'Opal'입니다. 항상 긍정적이고 격려하는 말투를 사용합니다.";
+            
+            // 동기부여는 메인 AI 응답 영역을 사용하지 않음
+            showLoading(true);
+            const motivationEl = document.getElementById('ai-motivation');
+            motivationEl.textContent = "새로운 동기부여 메시지를 불러오는 중...";
+            try {
+                const response = await fetch(GEMINI_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] }
+                    })
+                });
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (text) {
+                    motivationEl.textContent = text;
+                } else {
+                    throw new Error("응답 없음");
+                }
+            } catch (error) {
+                console.error("동기부여 메시지 로드 실패:", error);
+                motivationEl.textContent = "메시지를 불러오는 데 실패했습니다.";
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // 롤플레잉
+        document.getElementById('ai-roleplay-submit').addEventListener('click', () => {
+            const prompt = document.getElementById('ai-roleplay-prompt').value;
+            if (!prompt.trim()) {
+                showMessage("먼저 질문을 입력해주세요.");
+                return;
+            }
+            const systemPrompt = "당신은 애터미 비즈니스 코치 'Opal'입니다. 사용자가 고객 응대 롤플레잉을 요청했습니다. 고객의 부정적인 질문이나 거절에 대해 현명하고 긍정적으로 대처하는 답변 스크립트를 제공해주세요.";
+            const fullPrompt = `사용자(고객) 질문: "${prompt}"\n\n이 질문에 대한 현명한 답변을 알려주세요.`;
+            callGemini(fullPrompt, systemPrompt);
+        });
+
+        // 콘텐츠 생성
+        document.getElementById('ai-content-submit').addEventListener('click', () => {
+            const prompt = document.getElementById('ai-content-prompt').value;
+            if (!prompt.trim()) {
+                showMessage("먼저 요청사항을 입력해주세요.");
+                return;
+            }
+            const systemPrompt = "당신은 애터미 비즈니스 코치 'Opal'입니다. 사용자가 고객에게 보낼 메시지나 SNS 콘텐츠 생성을 요청했습니다. 요청에 맞춰 친절하고 전문적인 내용의 초안을 작성해주세요.";
+            const fullPrompt = `콘텐츠 생성 요청: "${prompt}"\n\n위 요청에 대한 콘텐츠 초안을 작성해줘.`;
+            callGemini(fullPrompt, systemPrompt);
+        });
+
+        // 목표 설정
+        document.getElementById('ai-goal-submit').addEventListener('click', () => {
+            const prompt = "제가 애터미 '세일즈 마스터' 직급을 달성하고 싶습니다. 이 목표를 달성하기 위해 매일 실천해야 할 현실적인 '스몰 스텝' 플랜을 제안해주세요. 체크리스트 형식으로 명확하게 알려주세요.";
+            const systemPrompt = "당신은 애터미 직급 체계와 성공 노하우에 정통한 비즈니스 코치 'Opal'입니다. 사용자의 목표 달성을 위한 구체적이고 실천 가능한 일일 행동 계획을 제안해주세요.";
+            callGemini(prompt, systemPrompt);
+        });
+
+        // --- 3. 성과 및 게이미피케이션 로직 ---
+
+        const calendarGrid = document.getElementById('calendar-grid');
+        const calendarMonthYear = document.getElementById('calendar-month-year');
+        
+        document.getElementById('prev-month').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
+        });
+        
+        document.getElementById('next-month').addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar(currentDate.getFullYear(), currentDate.getMonth());
+        });
+        
+        async function renderCalendar(year, month) {
+            if (!userId) return;
+            
+            calendarGrid.innerHTML = ''; // 캘린더 초기화
+            calendarMonthYear.textContent = `${year}년 ${month + 1}월`;
+
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            // Firestore에서 이번 달 데이터 가져오기
+            showLoading(true);
+            const monthStr = (month + 1).toString().padStart(2, '0');
+            const startDate = `${year}-${monthStr}-01`;
+            const endDate = `${year}-${monthStr}-${daysInMonth}`;
+            
+            const colRef = collection(db, 'artifacts', appId, 'users', userId, 'daily_steps');
+            const completedDays = new Set();
+            
+            try {
+                // 참고: Firestore 쿼리는 Firestore 콘솔에서 'daily_steps' 컬렉션에 대한
+                // 'date' 필드의 오름차순 색인을 생성해야 할 수 있습니다.
+                // 여기서는 프로토타입이므로 모든 문서를 가져와 클라이언트에서 필터링합니다.
+                // (더 효율적인 방법은 `where`를 사용하는 것이지만, 색인 이슈가 있을 수 있음)
+                
+                const querySnapshot = await getDocs(colRef);
+                querySnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const docDate = data.date; // "YYYY-MM-DD"
+                    if (docDate >= startDate && docDate <= endDate && data.completed_any) {
+                        const day = parseInt(docDate.split('-')[2], 10);
+                        completedDays.add(day);
+                    }
+                });
+                
+            } catch (error) {
+                console.error("캘린더 데이터 로드 실패:", error);
+                showMessage("캘린더 데이터를 불러오는 데 실패했습니다.");
+            } finally {
+                showLoading(false);
+            }
+
+            // 빈 칸 채우기
+            for (let i = 0; i < firstDay; i++) {
+                calendarGrid.appendChild(document.createElement('div'));
+            }
+
+            // 날짜 채우기
+            const today = new Date();
+            const todayDate = today.getDate();
+            const todayMonth = today.getMonth();
+            const todayYear = today.getFullYear();
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayEl = document.createElement('div');
+                dayEl.textContent = day;
+                dayEl.className = 'w-10 h-10 flex items-center justify-center rounded-full';
+
+                if (completedDays.has(day)) {
+                    // 실천한 날 (깃허브 잔디)
+                    dayEl.classList.add('bg-green-400', 'text-white', 'font-bold');
+                } else {
+                    dayEl.classList.add('bg-gray-100', 'text-gray-400');
+                }
+                
+                // 오늘 날짜 표시
+                if (day === todayDate && month === todayMonth && year === todayYear) {
+                    dayEl.classList.add('ring-2', 'ring-blue-500');
+                    if (!completedDays.has(day)) {
+                         dayEl.classList.remove('bg-gray-100', 'text-gray-400');
+                         dayEl.classList.add('bg-white', 'text-blue-600');
+                    }
+                }
+                calendarGrid.appendChild(dayEl);
+            }
+        }
+        
+        // 통계 로드
+        async function loadStats() {
+            if (!userId) return;
+            
+            const colRef = collection(db, 'artifacts', appId, 'users', userId, 'daily_steps');
+            let totalVod = 0;
+            let totalCustomers = 0;
+            let totalMembers = 0;
+            let totalCalls = 0;
+            let totalSns = 0;
+            let streak = 0;
+            const completedDates = [];
+            
+            try {
+                const querySnapshot = await getDocs(colRef);
+                querySnapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.vod_watched) {
+                        totalVod++;
+                    }
+                    totalCustomers += (data.customers_target || 0);
+                    totalMembers += (data.members_target || 0);
+                    totalCalls += (data.calls_target || 0);
+                    totalSns += (data.sns_target || 0);
+                    
+                    if(data.completed_any) {
+                        completedDates.push(data.date);
+                    }
+                });
+                
+                // 날짜 정렬
+                completedDates.sort((a, b) => new Date(b) - new Date(a));
+                
+                // 연속 실천 (Streak) 계산
+                if (completedDates.length > 0) {
+                    let checkDate = new Date(); // 오늘
+                    
+                    // 1. 오늘 실천했는지 확인
+                    if (completedDates.includes(getISODate(checkDate))) {
+                        streak = 1;
+                        // 어제부터 거슬러 올라가며 확인
+                        checkDate.setDate(checkDate.getDate() - 1);
+                        while(completedDates.includes(getISODate(checkDate))) {
+                            streak++;
+                            checkDate.setDate(checkDate.getDate() - 1);
+                        }
+                    } else {
+                        // 2. 오늘 실천 안했으면, 어제부터 확인
+                        checkDate.setDate(checkDate.getDate() - 1); // 어제
+                        if (completedDates.includes(getISODate(checkDate))) {
+                             streak = 1;
+                             // 그저께부터 거슬러 올라가며 확인
+                             checkDate.setDate(checkDate.getDate() - 1);
+                             while(completedDates.includes(getISODate(checkDate))) {
+                                streak++;
+                                checkDate.setDate(checkDate.getDate() - 1);
+                             }
+                        }
+                        // 어제도 안했으면 streak은 0 (초기값)
+                    }
+                }
+
+                document.getElementById('stats-streak').textContent = `${streak}일`;
+                document.getElementById('stats-vod').textContent = `${totalVod}회`;
+                document.getElementById('stats-customers').textContent = `${totalCustomers}명`;
+                document.getElementById('stats-members').textContent = `${totalMembers}명`;
+                document.getElementById('stats-calls').textContent = `${totalCalls}명`;
+                document.getElementById('stats-sns').textContent = `${totalSns}건`;
+                
+                // 간단한 레벨 시스템
+                let level = "새싹";
+                if (streak > 30) level = "프로";
+                else if (streak > 7) level = "열정맨";
+                else if (streak > 0) level = "실천가";
+                document.getElementById('stats-level').textContent = level;
+                
+            } catch (error) {
+                console.error("통계 로드 실패:", error);
+            }
+        }
+
+        // --- 4. 파트너 커넥트 로직 ---
+        
+        const nicknameInput = document.getElementById('nickname-input');
+        const currentNicknameEl = document.getElementById('current-nickname');
+
+        // 닉네임 저장
+        document.getElementById('nickname-save').addEventListener('click', async () => {
+            const nickname = nicknameInput.value.trim();
+            if (!nickname) {
+                showMessage("닉네임을 입력하세요.");
+                return;
+            }
+            if (!userId) {
+                showMessage("로그인이 필요합니다.");
+                return;
+            }
+            
+            showLoading(true);
+            const userDocRef = doc(db, 'artifacts', appId, 'users', userId);
+            try {
+                // TODO: 닉네임 중복 검사 (프로토타입에서는 생략)
+                // 닉네임 -> userId 매핑을 위한 public 문서 생성
+                // const nicknameDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'nicknames', nickname);
+                // await setDoc(nicknameDocRef, { userId: userId });
+                
+                // 사용자 비공개 문서에 닉네임 저장
+                await setDoc(userDocRef, { nickname: nickname }, { merge: true });
+                
+                currentNicknameEl.textContent = nickname;
+                nicknameInput.value = nickname;
+                showMessage("닉네임이 저장되었습니다.");
+                
+            } catch (error) {
+                console.error("닉네임 저장 실패:", error);
+                showMessage("닉네임 저장에 실패했습니다. (중복되거나 유효하지 않음)");
+            } finally {
+                showLoading(false);
+            }
+        });
+        
+        // 닉네임 로드
+        async function loadNickname() {
+            if (!userId) return;
+            
+            const userDocRef = doc(db, 'artifacts', appId, 'users', userId);
+            try {
+                const docSnap = await getDoc(userDocRef);
+                if (docSnap.exists() && docSnap.data().nickname) {
+                    const nickname = docSnap.data().nickname;
+                    currentNicknameEl.textContent = nickname;
+                    nicknameInput.value = nickname;
+                }
+            } catch (error) {
+                console.error("닉네임 로드 실패:", error);
+            }
+        }
+        
+        // 파트너 조회 (프로토타입)
+        document.getElementById('partner-view').addEventListener('click', () => {
+            const partnerNickname = document.getElementById('partner-nickname').value;
+            if (!partnerNickname) {
+                showMessage("조회할 파트너 닉네임을 입력하세요.");
+                return;
+            }
+            
+            const viewArea = document.getElementById('partner-view-area');
+            viewArea.classList.remove('hidden');
+            viewArea.innerHTML = `
+                <p class="font-semibold">'${partnerNickname}' 님의 활동 (프로토타입):</p>
+                <ul class="list-disc list-inside mt-2 text-gray-600">
+                    <li>2025-11-18: VOD 시청, 고객 2명 만나기</li>
+                    <li>2025-11-17: SNS 소통 3건</li>
+                </ul>
+                <p class="mt-2 text-xs text-indigo-600">실제 데이터 연동은 스폰서-파트너 간 복잡한 권한 설정이 필요합니다.</p>
+            `;
+        });
+        
+        // 스폰서 허용 (프로토타입)
+         document.getElementById('sponsor-allow').addEventListener('click', () => {
+             const sponsorNickname = document.getElementById('sponsor-nickname').value;
+             if (!sponsorNickname) {
+                showMessage("허용할 스폰서의 닉네임을 입력하세요.");
+                return;
+             }
+             showMessage(`'${sponsorNickname}' 님에게 내 활동 공유를 허용합니다. (프로토타입)`);
+             // 실제 구현 시:
+             // 1. 'nicknames' 컬렉션에서 스폰서의 userId 조회
+             // 2. 내 사용자 문서에 'allowedViewers: [sponsorUserId]' 추가
+             // 3. Firestore 보안 규칙 설정:
+             //    - /users/{userId}/daily_steps/{dateId} 문서는
+             //    - 1) 본인(request.auth.uid == userId) 또는
+             //    - 2) 'allowedViewers'에 포함된 사용자(request.auth.uid in get(/databases/$(database)/documents/users/$(userId)).data.allowedViewers)
+             //    - 만 읽기 가능하도록 설정
+         });
+
+        // --- 앱 시작 ---
+        initializeFirebase();
+        
+    </script>
+
+</body>
+</html>
