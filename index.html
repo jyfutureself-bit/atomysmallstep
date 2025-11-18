@@ -300,16 +300,19 @@
         // --- 글로벌 변수 및 설정 ---
         // Canvas 환경에서 제공되는 변수 사용
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig =const firebaseConfig = {
-        apiKey: "AIzaSyAP4BIbS6r2hTKvR8OIYSHf2RENXIJkkns",
-        authDomain: "atomy-ss.firebaseapp.com",
-        projectId: "atomy-ss",
-        storageBucket: "atomy-ss.firebasestorage.app",
-        messagingSenderId: "966571565808",
-        appId: "1:966571565808:web:45baff7d3a3f93735c1835",
-        measurementId: "G-065915WLTS"
+        
+        // ⚠️ [수정] GitHub Pages 배포용으로, 고객님의 'atomy-ss' 프로젝트 설정을 사용합니다.
+        const firebaseConfig = {
+            apiKey: "AIzaSyAP4BIbS6r2hTKvR8OIYSHf2RENXIJkkns",
+            authDomain: "atomy-ss.firebaseapp.com",
+            projectId: "atomy-ss",
+            storageBucket: "atomy-ss.firebasestorage.app",
+            messagingSenderId: "966571565808",
+            appId: "1:966571565808:web:45baff7d3a3f93735c1835",
+            measurementId: "G-065915WLTS"
         };
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // ⚠️ [수정] GitHub Pages에서는 이 변수가 없으므로 null로 설정합니다.
+        const initialAuthToken = null; 
 
         let db, auth, userId, app;
         let currentDate = new Date(); // 캘린더용 현재 날짜
@@ -322,7 +325,8 @@
 
         // AI 모델 설정
         const GEMINI_MODEL = 'gemini-2.5-flash-preview-09-2025';
-        const GEMINI_API_KEY = "AIzaSyCknwA2524IVA44QWOOJ4Ji3VYXvVUVE-o"; // Canvas에서 자동 제공
+        // ⚠️ [수정] GitHub Pages 배포용으로, 고객님의 Gemini 키를 사용합니다.
+        const GEMINI_API_KEY = "AIzaSyCknwA2524IVA44QWOOJ4Ji3VYXvVUVE-o"; 
         const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
         
         // --- 유틸리티 함수 ---
@@ -408,18 +412,14 @@
                         userId = user.uid;
                         await onUserAuthenticated();
                     } else {
-                        console.log("인증된 사용자 없음, 익명 또는 토큰 로그인 시도...");
-                        if (initialAuthToken) {
-                            try {
-                                await signInWithCustomToken(auth, initialAuthToken);
-                                console.log("커스텀 토큰으로 로그인 성공");
-                            } catch (tokenError) {
-                                console.error("커스텀 토큰 로그인 실패, 익명 로그인 시도:", tokenError);
-                                await signInAnonymously(auth);
-                            }
-                        } else {
+                        // ⚠️ [수정] GitHub Pages에서는 initialAuthToken이 없으므로, 항상 익명 로그인을 시도합니다.
+                        console.log("인증된 사용자 없음, 익명 로그인 시도...");
+                        try {
                             await signInAnonymously(auth);
                             console.log("익명으로 로그인 성공");
+                        } catch (anonError) {
+                            console.error("익명 로그인 실패:", anonError);
+                            showMessage("서버 연결에 실패했습니다. 새로고침 해주세요.");
                         }
                     }
                 });
@@ -448,7 +448,7 @@
                 await loadNickname();
                 
                 // 3. AI 동기부여 메시지 로드 (페이지 로드 시 1회)
-                // getAIMotivation();
+                getAIMotivation(); // ⚠️ [수정] 주석을 제거해서 앱 시작 시 동기부여 메시지를 불러옵니다.
             } catch (error) {
                 console.error("인증 후 데이터 로드 실패:", error);
                 showMessage("데이터 로드 중 오류가 발생했습니다.");
