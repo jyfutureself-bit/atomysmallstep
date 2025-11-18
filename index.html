@@ -300,7 +300,15 @@
         // --- 글로벌 변수 및 설정 ---
         // Canvas 환경에서 제공되는 변수 사용
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const firebaseConfig =const firebaseConfig = {
+        apiKey: "AIzaSyAP4BIbS6r2hTKvR8OIYSHf2RENXIJkkns",
+        authDomain: "atomy-ss.firebaseapp.com",
+        projectId: "atomy-ss",
+        storageBucket: "atomy-ss.firebasestorage.app",
+        messagingSenderId: "966571565808",
+        appId: "1:966571565808:web:45baff7d3a3f93735c1835",
+        measurementId: "G-065915WLTS"
+        };
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
 
         let db, auth, userId, app;
